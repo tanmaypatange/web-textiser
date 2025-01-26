@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Textizer Pro</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Add marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🔠 Web Textizer Pro</h1>
+            <p class="tagline">Extract and format text from any webpage</p>
+        </header>
+        
+        <form method="POST" class="input-form">
+            <div class="input-group">
+                <input type="url" 
+                       name="url" 
+                       value="{{ url }}"
+                       placeholder="Enter webpage URL (e.g., https://example.com)"
+                       required
+                       pattern="https?://.+"
+                       class="url-input">
+                <button type="submit" class="submit-btn">Extract Text</button>
+            </div>
+        </form>
+
+        {% if result %}
+        <div class="result-section">
+            <div class="result-header">
+                <h2>Extracted Content</h2>
+                <div class="actions">
+                    <span class="char-count">{{ result|length }} characters</span>
+                    <button onclick="toggleFormat()" class="format-btn">Toggle Format</button>
+                    <button onclick="copyText()" class="copy-btn">Copy Text</button>
+                </div>
+            </div>
+            <div class="result-container">
+                <div class="result-content" id="result-text">{{ result }}</div>
+                <div class="result-content formatted hidden" id="result-formatted"></div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function copyText() {
+            const text = document.querySelector('.result-content:not(.hidden)').innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                const copyBtn = document.querySelector('.copy-btn');
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyBtn.textContent = 'Copy Text';
+                }, 2000);
+            });
+        }
+
+        function toggleFormat() {
+            const rawText = document.getElementById('result-text');
+            const formattedText = document.getElementById('result-formatted');
+            const formatBtn = document.querySelector('.format-btn');
+            
+            if (rawText.classList.contains('hidden')) {
+                rawText.classList.remove('hidden');
+                formattedText.classList.add('hidden');
+                formatBtn.textContent = 'Show Formatted';
+            } else {
+                rawText.classList.add('hidden');
+                formattedText.classList.remove('hidden');
+                formatBtn.textContent = 'Show Raw';
+                
+                // Format the text using marked.js
+                if (!formattedText.innerHTML) {
+                    formattedText.innerHTML = marked.parse(rawText.innerText);
+                }
+            }
+        }
+
+        // Initialize formatting if result exists
+        window.onload = function() {
+            const resultText = document.getElementById('result-text');
+            if (resultText) {
+                const formattedText = document.getElementById('result-formatted');
+                formattedText.innerHTML = marked.parse(resultText.innerText);
+            }
+        }
+    </script>
+</body>
+</html>
